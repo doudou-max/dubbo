@@ -225,6 +225,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
             return;
         }
 
+        // 延迟暴露
         if (shouldDelay()) {
             DELAY_EXPORT_EXECUTOR.schedule(() -> {
                 try {
@@ -234,7 +235,9 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                     logger.error("delay export server occur exception, please check it.", e);
                 }
             }, getDelay(), TimeUnit.MILLISECONDS);
-        } else {
+        }
+        // 非延迟暴露
+        else {
             doExport();
         }
 
@@ -299,6 +302,9 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
     }
 
 
+    /**
+     * 执行暴露服务
+     */
     protected synchronized void doExport() {
         if (unexported) {
             throw new IllegalStateException("The service " + interfaceClass.getName() + " has already unexported!");
@@ -311,10 +317,14 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         if (StringUtils.isEmpty(path)) {
             path = interfaceName;
         }
+        // 暴露服务
         doExportUrls();
         bootstrap.setReady(true);
     }
 
+    /**
+     * 根据 url 暴露服务
+     */
     @SuppressWarnings({"unchecked", "rawtypes"})
     private void doExportUrls() {
         ServiceRepository repository = ApplicationModel.getServiceRepository();
@@ -336,10 +346,14 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                     .orElse(path), group, version);
             // In case user specified path, register service one more time to map it to path.
             repository.registerService(pathKey, interfaceClass);
+            // 把每个url服务暴露，并且注册到每个注册中心
             doExportUrlsFor1Protocol(protocolConfig, registryURLs, protocolConfigNum);
         }
     }
 
+    /**
+     * 根据 url 进行服务暴露，每个服务暴露，并注册到每个注册中心
+     */
     private void doExportUrlsFor1Protocol(ProtocolConfig protocolConfig, List<URL> registryURLs, int protocolConfigNum) {
         String name = protocolConfig.getName();
         if (StringUtils.isEmpty(name)) {
@@ -362,6 +376,8 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         if (metadataReportConfig != null && metadataReportConfig.isValid()) {
             map.putIfAbsent(METADATA_KEY, REMOTE_METADATA_STORAGE_TYPE);
         }
+
+        // 这么长一串可以先不用看
         if (CollectionUtils.isNotEmpty(getMethods())) {
             for (MethodConfig method : getMethods()) {
                 AbstractConfig.appendParameters(map, method, method.getName());
@@ -475,13 +491,17 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         // don't export when none is configured
         if (!SCOPE_NONE.equalsIgnoreCase(scope)) {
 
+            // 本地服务暴露 injvm
             // export to local if the config is not remote (export to remote only when config is remote)
             if (!SCOPE_REMOTE.equalsIgnoreCase(scope)) {
                 exportLocal(url);
             }
+
+            // 远程服务暴露
             // export to remote if the config is not local (export to local only when config is local)
             if (!SCOPE_LOCAL.equalsIgnoreCase(scope)) {
                 if (CollectionUtils.isNotEmpty(registryURLs)) {
+                    // 每个 service 都是一个 registryURL
                     for (URL registryURL : registryURLs) {
                         if (SERVICE_REGISTRY_PROTOCOL.equals(registryURL.getProtocol())) {
                             url = url.addParameterIfAbsent(SERVICE_NAME_MAPPING_KEY, "true");
@@ -511,10 +531,12 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                             registryURL = registryURL.addParameter(PROXY_KEY, proxy);
                         }
 
+                        // 获取 invoke  默认实现：JavassistProxyFactory
                         Invoker<?> invoker = PROXY_FACTORY.getInvoker(ref, (Class) interfaceClass,
                                 registryURL.addParameterAndEncoded(EXPORT_KEY, url.toFullString()));
                         DelegateProviderMetaDataInvoker wrapperInvoker = new DelegateProviderMetaDataInvoker(invoker, this);
 
+                        // 执行服务暴露 ProtocolFilterWrapper
                         Exporter<?> exporter = PROTOCOL.export(wrapperInvoker);
                         exporters.add(exporter);
                     }

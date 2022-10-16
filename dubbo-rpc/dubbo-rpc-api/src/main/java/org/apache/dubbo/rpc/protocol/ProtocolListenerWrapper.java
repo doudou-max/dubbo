@@ -56,6 +56,13 @@ public class ProtocolListenerWrapper implements Protocol {
         return protocol.getDefaultPort();
     }
 
+    /**
+     * ProtocolListenerWrapper 本类的 export() 调用会调用到 DubboProtocol 和 RegistryProtocol
+     * @param invoker Service invoker
+     * @param <T>
+     * @return
+     * @throws RpcException
+     */
     @Override
     public <T> Exporter<T> export(Invoker<T> invoker) throws RpcException {
         if (UrlUtils.isRegistry(invoker.getUrl())) {

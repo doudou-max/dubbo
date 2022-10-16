@@ -883,6 +883,7 @@ public class DubboBootstrap {
             if (logger.isInfoEnabled()) {
                 logger.info(NAME + " is starting...");
             }
+            // 服务暴露
             // 1. export Dubbo Services
             exportServices();
 
@@ -1067,12 +1068,16 @@ public class DubboBootstrap {
         }
     }
 
+    /**
+     * 暴露服务
+     */
     private void exportServices() {
         configManager.getServices().forEach(sc -> {
             // TODO, compatible with ServiceConfig.export()
             ServiceConfig serviceConfig = (ServiceConfig) sc;
             serviceConfig.setBootstrap(this);
 
+            // 异步暴露
             if (exportAsync) {
                 ExecutorService executor = executorRepository.getServiceExporterExecutor();
                 Future<?> future = executor.submit(() -> {
@@ -1083,7 +1088,9 @@ public class DubboBootstrap {
                     }
                 });
                 asyncExportingFutures.add(future);
-            } else {
+            }
+            // 同步暴露
+            else {
                 exportService(serviceConfig);
             }
         });
@@ -1097,6 +1104,7 @@ public class DubboBootstrap {
                     sc.toString() + "]. Only one service can be exported for the same triple (group, interface, version), " +
                     "please modify the group or version if you really need to export multiple services of the same interface.");
         }
+        // 服务暴露
         sc.export();
         exportedServices.put(sc.getServiceName(), sc);
     }

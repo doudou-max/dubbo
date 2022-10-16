@@ -67,6 +67,9 @@ public class ProtocolFilterWrapper implements Protocol {
         return protocol.getDefaultPort();
     }
 
+    /**
+     * 调用到 ProtocolListenerWrapper
+     */
     @Override
     public <T> Exporter<T> export(Invoker<T> invoker) throws RpcException {
         if (UrlUtils.isRegistry(invoker.getUrl())) {
