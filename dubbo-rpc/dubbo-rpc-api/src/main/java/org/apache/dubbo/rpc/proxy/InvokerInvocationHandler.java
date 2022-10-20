@@ -62,6 +62,9 @@ public class InvokerInvocationHandler implements InvocationHandler {
         }
     }
 
+    /**
+     * dubbo 代理对象服务调用
+     */
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         if (method.getDeclaringClass() == Object.class) {
@@ -93,6 +96,8 @@ public class InvokerInvocationHandler implements InvocationHandler {
             rpcInvocation.put(Constants.METHOD_MODEL, consumerModel.getMethodModel(method));
         }
 
+        // 方法回调(服务调用)
         return invoker.invoke(rpcInvocation).recreate();
     }
+
 }

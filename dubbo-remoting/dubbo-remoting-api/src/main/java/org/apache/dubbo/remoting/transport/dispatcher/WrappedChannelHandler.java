@@ -126,14 +126,16 @@ public class WrappedChannelHandler implements ChannelHandlerDelegate {
     }
 
     /**
+     * 获取线程池
      * get the shared executor for current Server or Client
      *
      * @return
      */
     public ExecutorService getSharedExecutorService() {
-        ExecutorRepository executorRepository =
-                ExtensionLoader.getExtensionLoader(ExecutorRepository.class).getDefaultExtension();
+        ExecutorRepository executorRepository = ExtensionLoader.getExtensionLoader(ExecutorRepository.class).getDefaultExtension();
+        // 如果用户自己配置了线程池，就用用户配置的
         ExecutorService executor = executorRepository.getExecutor(url);
+        // 如果没有配置，就默认创建 FixedThreadPool
         if (executor == null) {
             executor = executorRepository.createExecutorIfAbsent(url);
         }

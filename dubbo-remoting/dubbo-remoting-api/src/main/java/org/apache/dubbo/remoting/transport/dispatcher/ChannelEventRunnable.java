@@ -50,6 +50,9 @@ public class ChannelEventRunnable implements Runnable {
         this.exception = exception;
     }
 
+    /**
+     * 线程池执行的任务
+     */
     @Override
     public void run() {
         if (state == ChannelState.RECEIVED) {

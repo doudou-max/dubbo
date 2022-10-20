@@ -23,14 +23,23 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * dubbo consumer 启动类
+ */
 public class Application {
+
     /**
      * In order to make sure multicast registry works, need to specify '-Djava.net.preferIPv4Stack=true' before
      * launch the application
      */
     public static void main(String[] args) throws Exception {
+
         ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("spring/dubbo-consumer.xml");
+
         context.start();
+
+        // getBean() 方法会调用到 DubboBootstrap 的 init() 方法
+        // getBean() 获取的对象返回的是代理的对象，代理对象就是 InvokerInvocationHandler，然后通过该对象的 invoke() 进行调用
         DemoService demoService = context.getBean("demoService", DemoService.class);
         GreetingService greetingService = context.getBean("greetingService", GreetingService.class);
 

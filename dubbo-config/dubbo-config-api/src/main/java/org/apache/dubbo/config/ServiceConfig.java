@@ -537,6 +537,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                         DelegateProviderMetaDataInvoker wrapperInvoker = new DelegateProviderMetaDataInvoker(invoker, this);
 
                         // 执行服务暴露 ProtocolFilterWrapper
+                        // filter chain: QosProtocolWrapper -> ProtocolFilterWrapper -> buildInvokerChain
                         Exporter<?> exporter = PROTOCOL.export(wrapperInvoker);
                         exporters.add(exporter);
                     }

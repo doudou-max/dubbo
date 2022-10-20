@@ -30,8 +30,9 @@
     <dubbo:registry id="registry1" address="zookeeper://127.0.0.1:2181"/>
 
 
-
-    <dubbo:protocol name="dubbo" port="-1"/>
+    <!-- dubbo 线程池配置，默认fixed，其他的：cached limited eager -->
+    <!-- <dubbo:protocol name="dubbo" port="-1" dispatcher="all" threadpool="fixed" threadname="dd" threads="200" queues="0"/> -->
+    <dubbo:protocol name="dubbo" port="-1" />
 
     <bean id="demoService" class="org.apache.dubbo.demo.provider.DemoServiceImpl"/>
     <bean id="greetingService" class="org.apache.dubbo.demo.provider.GreetingServiceImpl"/>

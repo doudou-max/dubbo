@@ -168,8 +168,10 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
             invocation.put(SERIALIZATION_ID_KEY, serializationId);
         }
 
+        // 同步 rpc 调用
         AsyncRpcResult asyncResult;
         try {
+            // DubboInvoker
             asyncResult = (AsyncRpcResult) doInvoke(invocation);
         } catch (InvocationTargetException e) { // biz exception
             Throwable te = e.getTargetException();

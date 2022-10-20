@@ -31,6 +31,13 @@ import java.io.IOException;
 import static org.apache.dubbo.rpc.Constants.INPUT_KEY;
 import static org.apache.dubbo.rpc.Constants.OUTPUT_KEY;
 
+/**
+ * dubbo 的 encode 和 decode
+ * request -> encode
+ * response -> decode
+ * response -> encode
+ * request -> decode
+ */
 public final class DubboCountCodec implements Codec2 {
 
     private DubboCodec codec = new DubboCodec();

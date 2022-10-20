@@ -31,21 +31,7 @@ import org.apache.dubbo.common.threadpool.manager.ExecutorRepository;
 import org.apache.dubbo.common.utils.ArrayUtils;
 import org.apache.dubbo.common.utils.CollectionUtils;
 import org.apache.dubbo.common.utils.StringUtils;
-import org.apache.dubbo.config.ApplicationConfig;
-import org.apache.dubbo.config.ConfigCenterConfig;
-import org.apache.dubbo.config.ConsumerConfig;
-import org.apache.dubbo.config.DubboShutdownHook;
-import org.apache.dubbo.config.MetadataReportConfig;
-import org.apache.dubbo.config.MetricsConfig;
-import org.apache.dubbo.config.ModuleConfig;
-import org.apache.dubbo.config.MonitorConfig;
-import org.apache.dubbo.config.ProtocolConfig;
-import org.apache.dubbo.config.ProviderConfig;
-import org.apache.dubbo.config.ReferenceConfig;
-import org.apache.dubbo.config.RegistryConfig;
-import org.apache.dubbo.config.ServiceConfig;
-import org.apache.dubbo.config.ServiceConfigBase;
-import org.apache.dubbo.config.SslConfig;
+import org.apache.dubbo.config.*;
 import org.apache.dubbo.config.bootstrap.builders.ApplicationBuilder;
 import org.apache.dubbo.config.bootstrap.builders.ConsumerBuilder;
 import org.apache.dubbo.config.bootstrap.builders.ProtocolBuilder;
@@ -883,7 +869,7 @@ public class DubboBootstrap {
             if (logger.isInfoEnabled()) {
                 logger.info(NAME + " is starting...");
             }
-            // 服务暴露
+            // 服务暴露  (provider 调用)
             // 1. export Dubbo Services
             exportServices();
 
@@ -895,7 +881,10 @@ public class DubboBootstrap {
                 registerServiceInstance();
             }
 
+            // consumer 服务启动并不会通过这里调用 ReferenceConfig 去调用 init()
+            // 而是通过 spring 的 FactoryBeanRegistrySupport
             referServices();
+
             if (asyncExportingFutures.size() > 0) {
                 new Thread(() -> {
                     try {
@@ -1069,7 +1058,8 @@ public class DubboBootstrap {
     }
 
     /**
-     * 暴露服务
+     * provider 暴露服务
+     * consumer 不会调用到这里来 configManager.getServices() 获取集合 size = 0
      */
     private void exportServices() {
         configManager.getServices().forEach(sc -> {
@@ -1129,7 +1119,9 @@ public class DubboBootstrap {
             cache = ReferenceConfigCache.getCache();
         }
 
-        configManager.getReferences().forEach(rc -> {
+        // configManager.getReferences 获取服务的引用 (dubbo-consumer.xml 文件中的配置)
+        Collection<ReferenceConfigBase<?>> references = configManager.getReferences();
+        references.forEach(rc -> {
             // TODO, compatible with  ReferenceConfig.refer()
             ReferenceConfig referenceConfig = (ReferenceConfig) rc;
             referenceConfig.setBootstrap(this);
