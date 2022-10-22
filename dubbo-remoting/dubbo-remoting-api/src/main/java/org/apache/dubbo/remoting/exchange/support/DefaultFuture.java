@@ -76,12 +76,17 @@ public class DefaultFuture extends CompletableFuture<Object> {
         this.executor = executor;
     }
 
+    /**
+     * 实例化 DefaultFuture
+     * 将当前请求的信息缓存到本地 map
+     */
     private DefaultFuture(Channel channel, Request request, int timeout) {
         this.channel = channel;
         this.request = request;
         this.id = request.getId();
         this.timeout = timeout > 0 ? timeout : channel.getUrl().getPositiveParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT);
         // put into waiting map.
+        // <requestId,DefaultFuture>
         FUTURES.put(id, this);
         CHANNELS.put(id, channel);
     }
@@ -154,19 +159,26 @@ public class DefaultFuture extends CompletableFuture<Object> {
         }
     }
 
+    /** response 回复 */
     public static void received(Channel channel, Response response) {
         received(channel, response, false);
     }
 
+    /**
+     * response 回复实现
+     * newFuture() 方法在 request 是会将请求信息缓存到 FUTURES、CHANNELS 中
+     */
     public static void received(Channel channel, Response response, boolean timeout) {
         try {
             DefaultFuture future = FUTURES.remove(response.getId());
             if (future != null) {
+                // 检查超时
                 Timeout t = future.timeoutCheckTask;
                 if (!timeout) {
                     // decrease Time
                     t.cancel();
                 }
+                // 执行响应
                 future.doReceived(response);
             } else {
                 logger.warn("The timeout response finally returned at "
@@ -195,10 +207,14 @@ public class DefaultFuture extends CompletableFuture<Object> {
         this.cancel(true);
     }
 
+    /**
+     * 执行响应
+     */
     private void doReceived(Response res) {
         if (res == null) {
             throw new IllegalStateException("response cannot be null");
         }
+        // 响应成功，唤醒 Future
         if (res.getStatus() == Response.OK) {
             this.complete(res.getResult());
         } else if (res.getStatus() == Response.CLIENT_TIMEOUT || res.getStatus() == Response.SERVER_TIMEOUT) {

@@ -31,6 +31,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * This class will work as a wrapper wrapping outside of each protocol invoker.
+ * 异步转同步 invoke
  *
  * @param <T>
  */
@@ -47,6 +48,11 @@ public class AsyncToSyncInvoker<T> implements Invoker<T> {
         return invoker.getInterface();
     }
 
+    /**
+     * 异步转同步的实现方法
+     *  这个方法会去调用 DubboInvoker 的 doInvoke()，然后返回 Result，通过 CompletableFuture.get() 方法获取返回的结果
+     *  实现 异步转同步，让研发人员感觉上是 同步调用
+     */
     @Override
     public Result invoke(Invocation invocation) throws RpcException {
         Result asyncResult = invoker.invoke(invocation);

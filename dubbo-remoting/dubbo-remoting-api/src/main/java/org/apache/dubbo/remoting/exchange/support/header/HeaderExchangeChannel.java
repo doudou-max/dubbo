@@ -121,6 +121,9 @@ final class HeaderExchangeChannel implements ExchangeChannel {
         return request(request, channel.getUrl().getPositiveParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT), executor);
     }
 
+    /**
+     * channel 发起请求
+     */
     @Override
     public CompletableFuture<Object> request(Object request, int timeout, ExecutorService executor) throws RemotingException {
         if (closed) {
@@ -132,6 +135,7 @@ final class HeaderExchangeChannel implements ExchangeChannel {
         req.setVersion(Version.getProtocolVersion());
         req.setTwoWay(true);
         req.setData(request);
+        // 将请求存储到 DefaultFuture 中，用来实现异步转同步的实现
         DefaultFuture future = DefaultFuture.newFuture(channel, req, timeout, executor);
         try {
             channel.send(req);

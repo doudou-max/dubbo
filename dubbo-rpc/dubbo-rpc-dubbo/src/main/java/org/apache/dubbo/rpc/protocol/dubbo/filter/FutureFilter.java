@@ -38,6 +38,7 @@ import static org.apache.dubbo.rpc.protocol.dubbo.Constants.ASYNC_METHOD_INFO;
 
 /**
  * EventFilter
+ * consumer 请求回调处理类
  */
 @Activate(group = CommonConstants.CONSUMER)
 public class FutureFilter implements Filter, Filter.Listener {
@@ -66,6 +67,9 @@ public class FutureFilter implements Filter, Filter.Listener {
         fireThrowCallback(invoker, invocation, t);
     }
 
+    /**
+     * 处理 consumer 请求回调
+     */
     private void fireInvokeCallback(final Invoker<?> invoker, final Invocation invocation) {
         final AsyncMethodInfo asyncMethodInfo = getAsyncMethodInfo(invoker, invocation);
         if (asyncMethodInfo == null) {

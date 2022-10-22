@@ -83,6 +83,7 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
 
     /**
      * 执行服务调用
+     * 调用这个方法之前会先调用父类 AbstractInvoker.invoke()
      */
     @Override
     protected Result doInvoke(final Invocation invocation) throws Throwable {
@@ -101,19 +102,21 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
             boolean isOneway = RpcUtils.isOneway(getUrl(), invocation);
             int timeout = calculateTimeout(invocation, methodName);
             invocation.put(TIMEOUT_KEY, timeout);
-            // 单向请求
+            // 单向请求 (异步请求无返回)
             if (isOneway) {
                 boolean isSent = getUrl().getMethodParameter(methodName, Constants.SENT_KEY, false);
                 currentClient.send(inv, isSent);
                 return AsyncRpcResult.newDefaultAsyncResult(invocation);
             }
-            // 双向请求
+            // 双向请求 (异步转同步)
             else {
+                // getCallbackExecutor() 请求回调 -> 时间通知
                 ExecutorService executor = getCallbackExecutor(getUrl(), inv);
-                // 请求
+                // 发起请求 -> HeaderExchangeClient -> HeaderExchangeChannel -> request()
                 CompletableFuture<AppResponse> appResponseFuture =
                         currentClient.request(inv, timeout, executor).thenApply(obj -> (AppResponse) obj);
                 // save for 2.6.x compatibility, for example, TraceFilter in Zipkin uses com.alibaba.xxx.FutureAdapter
+                // 将请求的 Future 设置在 Context 中
                 FutureContext.getContext().setCompatibleFuture(appResponseFuture);
                 AsyncRpcResult result = new AsyncRpcResult(appResponseFuture, inv);
                 result.setExecutor(executor);

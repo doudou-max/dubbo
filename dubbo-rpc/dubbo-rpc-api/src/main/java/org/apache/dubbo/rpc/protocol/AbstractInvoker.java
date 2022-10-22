@@ -171,7 +171,7 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
         // 同步 rpc 调用
         AsyncRpcResult asyncResult;
         try {
-            // DubboInvoker
+            // 调用 DubboInvoker 的 doInvoke()
             asyncResult = (AsyncRpcResult) doInvoke(invocation);
         } catch (InvocationTargetException e) { // biz exception
             Throwable te = e.getTargetException();
@@ -192,6 +192,7 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
         } catch (Throwable e) {
             asyncResult = AsyncRpcResult.newDefaultAsyncResult(null, e, invocation);
         }
+        // 处理 asyncResult
         RpcContext.getContext().setFuture(new FutureAdapter(asyncResult.getResponseFuture()));
         return asyncResult;
     }

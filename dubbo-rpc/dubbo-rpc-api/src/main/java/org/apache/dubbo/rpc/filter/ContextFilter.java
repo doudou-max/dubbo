@@ -54,6 +54,8 @@ import static org.apache.dubbo.rpc.Constants.TOKEN_KEY;
  * current execution thread.
  *
  * @see RpcContext
+ *
+ * 主要用来解决数据污染的问题：car -> order -> pay
  */
 @Activate(group = PROVIDER, order = Integer.MIN_VALUE)
 public class ContextFilter implements Filter, Filter.Listener {

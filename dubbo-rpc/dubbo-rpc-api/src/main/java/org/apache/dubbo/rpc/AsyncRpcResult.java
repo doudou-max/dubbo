@@ -305,6 +305,7 @@ public class AsyncRpcResult implements Result {
         return new AsyncRpcResult(CompletableFuture.completedFuture(appResponse), invocation);
     }
 
+    /** 异步无返回响应结果，value 直接设置为 null，直接返回 */
     public static AsyncRpcResult newDefaultAsyncResult(Invocation invocation) {
         return newDefaultAsyncResult(null, null, invocation);
     }
