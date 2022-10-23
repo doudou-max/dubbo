@@ -90,10 +90,7 @@ public class RouterChain<T> {
     }
 
     /**
-     *
-     * @param url
-     * @param invocation
-     * @return
+     * 获取符合条件的 router
      */
     public List<Invoker<T>> route(URL url, Invocation invocation) {
         List<Invoker<T>> finalInvokers = invokers;

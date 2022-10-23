@@ -86,15 +86,21 @@ public class ConditionRouter extends AbstractRouter {
         }
     }
 
+    /** 初始化 router 配置 */
     public void init(String rule) {
         try {
             if (rule == null || rule.trim().length() == 0) {
                 throw new IllegalArgumentException("Illegal route rule!");
             }
+            // 移除 consumer 和 provider 相关的属性
             rule = rule.replace("consumer.", "").replace("provider.", "");
+            // 解析配置 (配置留意不要有空格)
             int i = rule.indexOf("=>");
+            // when -> consumer
             String whenRule = i < 0 ? null : rule.substring(0, i).trim();
+            // then -> provider
             String thenRule = i < 0 ? rule.trim() : rule.substring(i + 2).trim();
+            // parseRule() 解析配置
             Map<String, MatchPair> when = StringUtils.isBlank(whenRule) || "true".equals(whenRule) ? new HashMap<String, MatchPair>() : parseRule(whenRule);
             Map<String, MatchPair> then = StringUtils.isBlank(thenRule) || "false".equals(thenRule) ? null : parseRule(thenRule);
             // NOTE: It should be determined on the business level whether the `When condition` can be empty or not.
@@ -105,6 +111,7 @@ public class ConditionRouter extends AbstractRouter {
         }
     }
 
+    /** 根据 router 规则解析*/
     private static Map<String, MatchPair> parseRule(String rule)
             throws ParseException {
         Map<String, MatchPair> condition = new HashMap<String, MatchPair>();
@@ -175,6 +182,9 @@ public class ConditionRouter extends AbstractRouter {
         return condition;
     }
 
+    /**
+     * 执行 Invoker 过滤
+     */
     @Override
     public <T> List<Invoker<T>> route(List<Invoker<T>> invokers, URL url, Invocation invocation)
             throws RpcException {
