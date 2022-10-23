@@ -41,6 +41,9 @@ import static org.apache.dubbo.rpc.cluster.Constants.DEFAULT_FAILBACK_TASKS;
 import static org.apache.dubbo.rpc.cluster.Constants.FAIL_BACK_TASKS_KEY;
 
 /**
+ * 失败自动恢复
+ * 有重试
+ *
  * When fails, record failure requests and schedule for retry on a regular interval.
  * Especially useful for services of notification.
  *

@@ -29,6 +29,9 @@ import org.apache.dubbo.rpc.cluster.LoadBalance;
 import java.util.List;
 
 /**
+ * 调用出现异常，就 catch 掉异常，封装 Result 返回，所以就叫做委婉失败
+ * 没有重试
+ *
  * When invoke fails, log the error message and ignore this error by returning an empty Result.
  * Usually used to write audit logs and other operations
  *
@@ -53,4 +56,5 @@ public class FailsafeClusterInvoker<T> extends AbstractClusterInvoker<T> {
             return AsyncRpcResult.newDefaultAsyncResult(null, null, invocation); // ignore
         }
     }
+
 }

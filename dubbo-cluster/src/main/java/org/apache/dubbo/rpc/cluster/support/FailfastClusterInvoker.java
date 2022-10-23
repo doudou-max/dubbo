@@ -28,6 +28,9 @@ import org.apache.dubbo.rpc.cluster.LoadBalance;
 import java.util.List;
 
 /**
+ * 快速失败，有错直接抛出
+ * 没有重试
+ *
  * Execute exactly once, which means this policy will throw an exception immediately in case of an invocation error.
  * Usually used for non-idempotent write operations
  *
@@ -42,7 +45,9 @@ public class FailfastClusterInvoker<T> extends AbstractClusterInvoker<T> {
 
     @Override
     public Result doInvoke(Invocation invocation, List<Invoker<T>> invokers, LoadBalance loadbalance) throws RpcException {
+        // 检查 invoker
         checkInvokers(invokers, invocation);
+        // 负载均衡
         Invoker<T> invoker = select(loadbalance, invocation, invokers, null);
         try {
             return invoker.invoke(invocation);
@@ -59,4 +64,5 @@ public class FailfastClusterInvoker<T> extends AbstractClusterInvoker<T> {
                     e.getCause() != null ? e.getCause() : e);
         }
     }
+
 }

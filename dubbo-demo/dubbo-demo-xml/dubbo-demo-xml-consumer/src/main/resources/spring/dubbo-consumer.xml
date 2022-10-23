@@ -30,7 +30,7 @@
 
     <dubbo:registry address="zookeeper://127.0.0.1:2181"/>
 
-    <dubbo:reference id="demoService" check="true"
+    <dubbo:reference id="demoService" check="true" cluster="failover" retries="3"
                      interface="org.apache.dubbo.demo.DemoService"/>
 
     <dubbo:reference version="1.0.0" group="greeting" id="greetingService" check="false"

@@ -38,6 +38,9 @@ import static org.apache.dubbo.common.constants.CommonConstants.DEFAULT_RETRIES;
 import static org.apache.dubbo.common.constants.CommonConstants.RETRIES_KEY;
 
 /**
+ * 故障切换
+ * 有重试
+ *
  * When invoke fails, log the initial error and retry other invokers (retry n times, which means at most n different invokers will be invoked)
  * Note that retry causes latency.
  * <p>
@@ -62,25 +65,32 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
         List<Invoker<T>> copyInvokers = invokers;
         checkInvokers(copyInvokers, invocation);
         String methodName = RpcUtils.getMethodName(invocation);
+        // 获取 invoker 的 retry 次数
         int len = calculateInvokeTimes(methodName);
         // retry loop.
         RpcException le = null; // last exception.
+        // 获取可用的 Invoker 列表
         List<Invoker<T>> invoked = new ArrayList<Invoker<T>>(copyInvokers.size()); // invoked invokers.
         Set<String> providers = new HashSet<String>(len);
         for (int i = 0; i < len; i++) {
             //Reselect before retry to avoid a change of candidate `invokers`.
             //NOTE: if `invokers` changed, then `invoked` also lose accuracy.
+            // 第一次正常执行不会执行这里
+            // 所有重试都会执行到这里
             if (i > 0) {
+                // 判断 consumer 是否还存在
                 checkWhetherDestroyed();
+                // 重新获取 Invoker 列表
                 copyInvokers = list(invocation);
-                // check again
+                // check again，重新检查所有的 Invoker
                 checkInvokers(copyInvokers, invocation);
             }
-            // 处理负载均衡策略
+            // 通过负载均衡，获取待执行的 Invoker
             Invoker<T> invoker = select(loadbalance, invocation, copyInvokers, invoked);
             invoked.add(invoker);
             RpcContext.getContext().setInvokers((List) invoked);
             try {
+                // 调用
                 Result result = invoker.invoke(invocation);
                 if (le != null && logger.isWarnEnabled()) {
                     logger.warn("Although retry the method " + methodName
@@ -93,6 +103,7 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
                             + " using the dubbo version " + Version.getVersion() + ". Last error is: "
                             + le.getMessage(), le);
                 }
+                // RpcException 为空就直接返回
                 return result;
             } catch (RpcException e) {
                 if (e.isBiz()) { // biz exception.
@@ -115,6 +126,7 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
                 + le.getMessage(), le.getCause() != null ? le.getCause() : le);
     }
 
+    /** 获取 Invoker 重试次数 */
     private int calculateInvokeTimes(String methodName) {
         int len = getUrl().getMethodParameter(methodName, RETRIES_KEY, DEFAULT_RETRIES) + 1;
         RpcContext rpcContext = RpcContext.getContext();
