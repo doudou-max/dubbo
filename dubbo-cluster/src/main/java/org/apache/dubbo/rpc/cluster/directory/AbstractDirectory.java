@@ -90,12 +90,13 @@ public abstract class AbstractDirectory<T> implements Directory<T> {
         return this.consumerUrl;
     }
 
+    /** 获取 Directory 列表 */
     @Override
     public List<Invoker<T>> list(Invocation invocation) throws RpcException {
         if (destroyed) {
             throw new RpcException("Directory already destroyed .url: " + getUrl());
         }
-
+        // 真正获取列表
         return doList(invocation);
     }
 

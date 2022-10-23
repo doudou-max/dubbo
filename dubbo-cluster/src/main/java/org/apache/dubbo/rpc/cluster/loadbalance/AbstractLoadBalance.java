@@ -50,6 +50,9 @@ public abstract class AbstractLoadBalance implements LoadBalance {
         return ww < 1 ? 1 : (Math.min(ww, weight));
     }
 
+    /**
+     * 根据具体负载均衡策略处理负载均衡
+     */
     @Override
     public <T> Invoker<T> select(List<Invoker<T>> invokers, URL url, Invocation invocation) {
         if (CollectionUtils.isEmpty(invokers)) {
@@ -58,6 +61,7 @@ public abstract class AbstractLoadBalance implements LoadBalance {
         if (invokers.size() == 1) {
             return invokers.get(0);
         }
+        // 不同策略具体实现，处理权重
         return doSelect(invokers, url, invocation);
     }
 
@@ -65,6 +69,9 @@ public abstract class AbstractLoadBalance implements LoadBalance {
 
 
     /**
+     * 获取考虑了预热时间的调用程序调用的权重
+     * 如果正常运行时间在预热时间内，则权重将按比例减少
+     *
      * Get the weight of the invoker's invocation which takes warmup time into account
      * if the uptime is within the warmup time, the weight will be reduce proportionally
      *
@@ -84,12 +91,16 @@ public abstract class AbstractLoadBalance implements LoadBalance {
         } else {
             weight = url.getMethodParameter(invocation.getMethodName(), WEIGHT_KEY, DEFAULT_WEIGHT);
             if (weight > 0) {
+                // 计算权重：考虑到服务刚启动的时候需要加载很多数据，所以进行时间戳的计算，启动10分钟中把服务权重降到 1
                 long timestamp = invoker.getUrl().getParameter(TIMESTAMP_KEY, 0L);
                 if (timestamp > 0L) {
+                    // 系统当前时间 - 服务调用时间  (01秒 - 02秒)
                     long uptime = System.currentTimeMillis() - timestamp;
+                    // 小于0 说明服务是刚启动不久就进行服务调用，所以把服务的权重降到 1
                     if (uptime < 0) {
                         return 1;
                     }
+                    // 大于0 说明服务已经启动成功，
                     int warmup = invoker.getUrl().getParameter(WARMUP_KEY, DEFAULT_WARMUP);
                     if (uptime > 0 && uptime < warmup) {
                         weight = calculateWarmupWeight((int)uptime, warmup, weight);

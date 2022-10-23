@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
+ * 最短活跃优先 + 加权随机
  * ShortestResponseLoadBalance
  * </p>
  * Filter the number of invokers with the shortest response time of success calls and count the weights and quantities of these invokers.

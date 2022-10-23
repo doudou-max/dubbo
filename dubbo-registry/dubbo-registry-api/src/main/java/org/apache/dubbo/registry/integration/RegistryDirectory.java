@@ -105,6 +105,10 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> {
         registry.unsubscribe(url, this);
     }
 
+    /**
+     * dubbo 监听到 zk provider 信息变化之后，需要通知给 dubbo，
+     * dubbo 收到通知之后，需要把信息同步给 dubbo 各个组件，这里是通知的具体实现
+     */
     @Override
     public synchronized void notify(List<URL> urls) {
         Map<String, List<URL>> categoryUrls = urls.stream()

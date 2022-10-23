@@ -56,6 +56,17 @@ import static org.apache.dubbo.remoting.Constants.CHECK_KEY;
 
 
 /**
+ * 动态获取路由列表抽象实现
+ *
+ * NotifyListener.notify() 动态通知：
+ *   consumer 启动拉去 zk 信息，注册 watch()，动态监听 zk 信息的变化
+ *   当 dubbo 监听到 zk provider 信息变化时，dubbo 需要通知 dubbo 的每个组件，provider 信息发生了变化
+ *   而通知的实现就是通过 NotifyListener.notify()
+ *   其他地方触发通知：
+ *      consumer 收到 zk watch() 过来的时候会触发 notify()
+ *      provider 启动，往 zk 中写入数据，会触发 notify()
+ *      三个场景触发 notify，同样会调用到 RegistryDirectory.notify()
+ *
  * RegistryDirectory
  */
 public abstract class DynamicDirectory<T> extends AbstractDirectory<T> implements NotifyListener {
@@ -160,6 +171,9 @@ public abstract class DynamicDirectory<T> extends AbstractDirectory<T> implement
         registry.unsubscribe(url, this);
     }
 
+    /**
+     * 动态获取路由列表
+     */
     @Override
     public List<Invoker<T>> doList(Invocation invocation) {
         if (forbidden) {
@@ -177,6 +191,7 @@ public abstract class DynamicDirectory<T> extends AbstractDirectory<T> implement
         List<Invoker<T>> invokers = null;
         try {
             // Get invokers from cache, only runtime routers will be executed.
+            // 获取符合条件的 route
             invokers = routerChain.route(getConsumerUrl(), invocation);
         } catch (Throwable t) {
             logger.error("Failed to execute router: " + getUrl() + ", cause: " + t.getMessage(), t);

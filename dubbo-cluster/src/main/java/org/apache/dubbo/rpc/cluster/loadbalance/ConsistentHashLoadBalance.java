@@ -32,6 +32,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import static org.apache.dubbo.common.constants.CommonConstants.COMMA_SPLIT_PATTERN;
 
 /**
+ * 确定的入参，确定的提供者，适用于有状态请求
  * ConsistentHashLoadBalance
  */
 public class ConsistentHashLoadBalance extends AbstractLoadBalance {

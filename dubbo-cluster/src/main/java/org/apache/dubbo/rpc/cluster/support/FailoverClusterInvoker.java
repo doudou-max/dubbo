@@ -52,6 +52,10 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
         super(directory);
     }
 
+    /**
+     * AbstractClusterInvoker.invoke() 调用到这里，已经确定负载均衡的策略类型
+     * 到这一步拿到具体的实现策略去处理权重
+     */
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     public Result doInvoke(Invocation invocation, final List<Invoker<T>> invokers, LoadBalance loadbalance) throws RpcException {
@@ -72,6 +76,7 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
                 // check again
                 checkInvokers(copyInvokers, invocation);
             }
+            // 处理负载均衡策略
             Invoker<T> invoker = select(loadbalance, invocation, copyInvokers, invoked);
             invoked.add(invoker);
             RpcContext.getContext().setInvokers((List) invoked);

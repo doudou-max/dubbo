@@ -96,7 +96,8 @@ public class InvokerInvocationHandler implements InvocationHandler {
             rpcInvocation.put(Constants.METHOD_MODEL, consumerModel.getMethodModel(method));
         }
 
-        // 方法回调(服务调用)
+        // 方法回调(服务调用)，调用 DubboInvoker.invoke()
+        // 当然中间也有其他的步骤：filter链路、集群处理
         return invoker.invoke(rpcInvocation).recreate();
     }
 

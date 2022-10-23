@@ -119,6 +119,8 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
     }
 
     /**
+     * 调用这个方法前，已经确定负载均衡的策略，由 FailoverClusterInvoker.doInvoker() 调用到这里
+     *
      * Select a invoker using loadbalance policy.</br>
      * a) Firstly, select an invoker using loadbalance. If this invoker is in previously selected list, or,
      * if this invoker is unavailable, then continue step b (reselect), otherwise return the first selected invoker</br>
@@ -156,6 +158,7 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
             }
         }
 
+        // 根据具体的负载均衡策略处理负载均衡
         Invoker<T> invoker = doSelect(loadbalance, invocation, invokers, selected);
 
         if (sticky) {
@@ -164,6 +167,9 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
         return invoker;
     }
 
+    /**
+     * 处理负载均衡
+     */
     private Invoker<T> doSelect(LoadBalance loadbalance, Invocation invocation,
                                 List<Invoker<T>> invokers, List<Invoker<T>> selected) throws RpcException {
 
@@ -173,6 +179,8 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
         if (invokers.size() == 1) {
             return invokers.get(0);
         }
+
+        // 处理负载均衡 -> AbstractLoadBalance.select()
         Invoker<T> invoker = loadbalance.select(invokers, getUrl(), invocation);
 
         //If the `invoker` is in the  `selected` or invoker is unavailable && availablecheck is true, reselect.
@@ -249,6 +257,9 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
         return null;
     }
 
+    /**
+     * invoke() -> FailoverClusterInvoker.doInvoke()
+     */
     @Override
     public Result invoke(final Invocation invocation) throws RpcException {
         checkWhetherDestroyed();
@@ -259,9 +270,12 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
             ((RpcInvocation) invocation).addObjectAttachments(contextAttachments);
         }
 
+        // directory 处理，consumer 获取 provider 可用列表
         List<Invoker<T>> invokers = list(invocation);
+        // loadbalance (选择具体的负载均衡实现)
         LoadBalance loadbalance = initLoadBalance(invokers, invocation);
         RpcUtils.attachInvocationIdIfAsync(getUrl(), invocation);
+        // 调用 FailoverClusterInvoker
         return doInvoke(invocation, invokers, loadbalance);
     }
 
@@ -293,6 +307,7 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
     protected abstract Result doInvoke(Invocation invocation, List<Invoker<T>> invokers,
                                        LoadBalance loadbalance) throws RpcException;
 
+    /** AbstractDirectory.list() */
     protected List<Invoker<T>> list(Invocation invocation) throws RpcException {
         return directory.list(invocation);
     }
