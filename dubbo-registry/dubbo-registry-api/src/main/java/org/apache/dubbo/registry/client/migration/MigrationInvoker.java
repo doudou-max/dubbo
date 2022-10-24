@@ -48,7 +48,7 @@ public class MigrationInvoker<T> implements MigrationClusterInvoker<T> {
     private Registry registry;
     private Class<T> type;
     private RegistryProtocol registryProtocol;
-
+    // MockClusterInvoker
     private volatile ClusterInvoker<T> invoker;
     private volatile ClusterInvoker<T> serviceDiscoveryInvoker;
     private volatile ClusterInvoker<T> currentAvailableInvoker;

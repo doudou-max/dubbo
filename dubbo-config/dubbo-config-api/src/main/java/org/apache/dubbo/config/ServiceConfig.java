@@ -117,6 +117,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
 
     private String serviceName;
 
+    /** 获取类型为 Protocol 的 ExtensionLoader 实例，再调用 getAdaptiveExtension() 获取具体实现对象 */
     private static final Protocol PROTOCOL = ExtensionLoader.getExtensionLoader(Protocol.class).getAdaptiveExtension();
 
     /**

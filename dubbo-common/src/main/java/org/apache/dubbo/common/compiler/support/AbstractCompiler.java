@@ -30,6 +30,9 @@ public abstract class AbstractCompiler implements Compiler {
 
     private static final Pattern CLASS_PATTERN = Pattern.compile("class\\s+([$_a-zA-Z][$_a-zA-Z0-9]*)\\s+");
 
+    /**
+     * 编译
+     */
     @Override
     public Class<?> compile(String code, ClassLoader classLoader) {
         code = code.trim();
@@ -55,6 +58,7 @@ public abstract class AbstractCompiler implements Compiler {
                 throw new IllegalStateException("The java code not endsWith \"}\", code: \n" + code + "\n");
             }
             try {
+                // 执行编译
                 return doCompile(className, code);
             } catch (RuntimeException t) {
                 throw t;

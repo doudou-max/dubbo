@@ -59,6 +59,7 @@ public abstract class AbstractCluster implements Cluster {
 
         private AbstractClusterInvoker<T> clusterInvoker;
         private ClusterInterceptor interceptor;
+        // FailOverCluster
         private AbstractClusterInvoker<T> next;
 
         public InterceptorInvokerNode(AbstractClusterInvoker<T> clusterInvoker,
@@ -89,6 +90,7 @@ public abstract class AbstractCluster implements Cluster {
             Result asyncResult;
             try {
                 interceptor.before(next, invocation);
+                // AbstractClusterInvoker -> ClusterInterceptor.invoke()
                 asyncResult = interceptor.intercept(next, invocation);
             } catch (Exception e) {
                 // onError callback

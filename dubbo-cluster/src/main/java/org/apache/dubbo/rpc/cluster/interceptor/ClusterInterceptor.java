@@ -44,6 +44,7 @@ public interface ClusterInterceptor {
      * @throws RpcException
      */
     default Result intercept(AbstractClusterInvoker<?> clusterInvoker, Invocation invocation) throws RpcException {
+        // AbstractClusterInvoker.invoke()
         return clusterInvoker.invoke(invocation);
     }
 

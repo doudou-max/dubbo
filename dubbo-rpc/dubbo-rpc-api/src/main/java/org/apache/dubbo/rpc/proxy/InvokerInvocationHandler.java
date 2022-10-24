@@ -35,10 +35,16 @@ import java.lang.reflect.Method;
  * InvokerHandler
  */
 public class InvokerInvocationHandler implements InvocationHandler {
+
     private static final Logger logger = LoggerFactory.getLogger(InvokerInvocationHandler.class);
+
+    // MigrationInvoker
     private final Invoker<?> invoker;
+
     private ConsumerModel consumerModel;
+
     private URL url;
+
     private String protocolServiceKey;
 
     public static Field stackTraceField;

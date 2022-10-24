@@ -131,6 +131,7 @@ public class ClassUtils {
 
     /**
      * get class loader
+     * org.apache.dubbo.common.extension.ExtensionLoader 类加载器为 AppClassLoader
      *
      * @param clazz
      * @return class loader

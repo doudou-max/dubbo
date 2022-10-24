@@ -262,6 +262,7 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
      */
     @Override
     public Result invoke(final Invocation invocation) throws RpcException {
+        // 检查是否销毁
         checkWhetherDestroyed();
 
         // binding attachments into invocation.

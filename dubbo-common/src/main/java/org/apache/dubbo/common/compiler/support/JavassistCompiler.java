@@ -40,6 +40,11 @@ public class JavassistCompiler extends AbstractCompiler {
 
     private static final Pattern FIELD_PATTERN = Pattern.compile("[^\n]+=[^\n]+;");
 
+    /**
+     * String code -> class -> run
+     *  javasist : 字节码编译 -> 运行期修改或增加java代码
+     *  Hello.java -> Hello.class[字节码] -> java命令 -> run
+     */
     @Override
     public Class<?> doCompile(String name, String source) throws Throwable {
         CtClassBuilder builder = new CtClassBuilder();

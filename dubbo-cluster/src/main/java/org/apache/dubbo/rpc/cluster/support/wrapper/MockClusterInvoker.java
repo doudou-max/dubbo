@@ -92,17 +92,24 @@ public class MockClusterInvoker<T> implements ClusterInvoker<T> {
     public Result invoke(Invocation invocation) throws RpcException {
         Result result = null;
 
+        // 获取 mock 配置值
         String value = getUrl().getMethodParameter(invocation.getMethodName(), MOCK_KEY, Boolean.FALSE.toString()).trim();
+
+        // 无 mock 逻辑，直接调用其他 Invoker 对象的 invoke 方法
         if (value.length() == 0 || "false".equalsIgnoreCase(value)) {
-            //no mock
+            //no mock  AbstractCluster.invoke()
             result = this.invoker.invoke(invocation);
-        } else if (value.startsWith("force")) {
+        }
+        // 直接执行 mock 逻辑，不发起远程调用
+        else if (value.startsWith("force")) {
             if (logger.isWarnEnabled()) {
                 logger.warn("force-mock: " + invocation.getMethodName() + " force-mock enabled , url : " + getUrl());
             }
             //force:direct mock
             result = doMockInvoke(invocation, null);
-        } else {
+        }
+        // 表示消费方对调用服务失败后，再执行 mock 逻辑，不抛出异常
+        else {
             //fail-mock
             try {
                 result = this.invoker.invoke(invocation);
