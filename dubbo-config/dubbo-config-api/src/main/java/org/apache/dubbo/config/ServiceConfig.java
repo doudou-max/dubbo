@@ -341,6 +341,8 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         List<URL> registryURLs = ConfigValidationUtils.loadRegistries(this, true);
 
         int protocolConfigNum = protocols.size();
+
+        // 把服务暴露到每个注册中心 (所以名称为 For1)
         for (ProtocolConfig protocolConfig : protocols) {
             String pathKey = URL.buildKey(getContextPath(protocolConfig)
                     .map(p -> p + "/" + path)
