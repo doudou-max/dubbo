@@ -136,8 +136,10 @@ final class HeaderExchangeChannel implements ExchangeChannel {
         req.setTwoWay(true);
         req.setData(request);
         // 将请求存储到 DefaultFuture 中，用来实现异步转同步的实现
+        // (往 FUTURES、CHANNELS 添加数据，开启计时器计时)
         DefaultFuture future = DefaultFuture.newFuture(channel, req, timeout, executor);
         try {
+            // netty send，下一步调用：AbstractPeer
             channel.send(req);
         } catch (RemotingException e) {
             future.cancel();

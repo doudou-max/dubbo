@@ -25,6 +25,15 @@ import org.apache.dubbo.rpc.Result;
 import org.apache.dubbo.rpc.RpcException;
 
 /**
+ * filter 节点，由 AbstractClusterInvoker(FailoverClusterInvoker) 调用到这里
+ *   从这里开始链路的执行调用，执行一个 Filter 就回到 FilterNode 的 invoke()
+ *              filter                      group
+ *          ConsumerContextFilter         consumer
+ *          FutureFilter                  consumer
+ *          MonitorFilter                consumer,provider
+ *          ListenerInvokerWrapper
+ *          AsyncToSyncInvoker
+ *
  * @see org.apache.dubbo.rpc.protocol.ProtocolFilterWrapper
  *
  */
@@ -58,6 +67,7 @@ class FilterNode<T> implements Invoker<T>{
     public Result invoke(Invocation invocation) throws RpcException {
         Result asyncResult;
         try {
+            // 下一个调用：ConsumerContextFilter
             asyncResult = filter.invoke(next, invocation);
         } catch (Exception e) {
             if (filter instanceof ListenableFilter) {

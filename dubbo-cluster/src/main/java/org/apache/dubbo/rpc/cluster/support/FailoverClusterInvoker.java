@@ -56,27 +56,38 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
     }
 
     /**
-     * AbstractClusterInvoker.invoke() 调用到这里，已经确定负载均衡的策略类型
-     * 到这一步拿到具体的实现策略去处理权重
+     * AbstractClusterInvoker.invoke() 调用到这里 FailoverClusterInvoker.doInvoke
+     *
+     * @param invokers provider 列表
+     * @param loadbalance 具体的负载均衡策略
      */
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     public Result doInvoke(Invocation invocation, final List<Invoker<T>> invokers, LoadBalance loadbalance) throws RpcException {
+
         List<Invoker<T>> copyInvokers = invokers;
+
+        // 检查 invokers 不能为空
         checkInvokers(copyInvokers, invocation);
+
+        // 获取调用的方法名称
         String methodName = RpcUtils.getMethodName(invocation);
-        // 获取 invoker 的 retry 次数
+
+        // 根据方法名获取 invoker 的 retries 次数
         int len = calculateInvokeTimes(methodName);
+
         // retry loop.
         RpcException le = null; // last exception.
-        // 获取可用的 Invoker 列表
+
+        // 已调用的 Invoker 列表
         List<Invoker<T>> invoked = new ArrayList<Invoker<T>>(copyInvokers.size()); // invoked invokers.
+
         Set<String> providers = new HashSet<String>(len);
+
         for (int i = 0; i < len; i++) {
-            //Reselect before retry to avoid a change of candidate `invokers`.
-            //NOTE: if `invokers` changed, then `invoked` also lose accuracy.
-            // 第一次正常执行不会执行这里
-            // 所有重试都会执行到这里
+            //Reselect before retry to avoid a change of candidate `invokers`. (重试前重新选择，以避免候选“调用者”的更改)
+            //NOTE: if `invokers` changed, then `invoked` also lose accuracy. (如果“调用者”改变了，那么“调用者”也会失去准确性。)
+            // 第一次正常执行不会执行这里，所有重试都会执行到这里
             if (i > 0) {
                 // 判断 consumer 是否还存在
                 checkWhetherDestroyed();
@@ -87,10 +98,12 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
             }
             // 通过负载均衡，获取待执行的 Invoker
             Invoker<T> invoker = select(loadbalance, invocation, copyInvokers, invoked);
+            // 添加到已执行的 invoked 列表
             invoked.add(invoker);
             RpcContext.getContext().setInvokers((List) invoked);
             try {
-                // 调用
+                // 根据负载均衡策略选择 Invoker 之后，再根据 Invoker 调用
+                // InvokerWrapper.invoke(Invocation invocation)
                 Result result = invoker.invoke(invocation);
                 if (le != null && logger.isWarnEnabled()) {
                     logger.warn("Although retry the method " + methodName
@@ -128,6 +141,7 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
 
     /** 获取 Invoker 重试次数 */
     private int calculateInvokeTimes(String methodName) {
+        // 当前调用就是 1 次，再获取 2 次，相加总共就是 3 次
         int len = getUrl().getMethodParameter(methodName, RETRIES_KEY, DEFAULT_RETRIES) + 1;
         RpcContext rpcContext = RpcContext.getContext();
         Object retry = rpcContext.getObjectAttachment(RETRIES_KEY);

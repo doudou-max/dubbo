@@ -56,6 +56,7 @@ public class RandomLoadBalance extends AbstractLoadBalance {
         // The sum of weights
         int totalWeight = 0;
         for (int i = 0; i < length; i++) {
+            // 获取权重，AbstractLoadBalance 中的共用方法
             int weight = getWeight(invokers.get(i), invocation);
             // Sum
             totalWeight += weight;

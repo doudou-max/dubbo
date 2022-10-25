@@ -73,6 +73,9 @@ public class ListenerInvokerWrapper<T> implements Invoker<T> {
         return invoker.isAvailable();
     }
 
+    /**
+     * 调用具体的实现，例如：AsyncToSyncInvoker
+     */
     @Override
     public Result invoke(Invocation invocation) throws RpcException {
         return invoker.invoke(invocation);

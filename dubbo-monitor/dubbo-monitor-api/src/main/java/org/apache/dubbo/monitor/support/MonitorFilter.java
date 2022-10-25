@@ -88,6 +88,7 @@ public class MonitorFilter implements Filter, Filter.Listener {
             invocation.put(MONITOR_REMOTE_HOST_STORE, RpcContext.getContext().getRemoteHost());
             getConcurrent(invoker, invocation).incrementAndGet(); // count up
         }
+        // 调用到 ListenerInvokerWrapper
         return invoker.invoke(invocation); // proceed invocation chain
     }
 

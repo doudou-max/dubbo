@@ -63,6 +63,9 @@ public class DefaultExecutorRepository implements ExecutorRepository {
     }
 
     /**
+     * 创建线程池如果线程池不存在
+     *    线程池的创建在服务启动的时候已经初始化完成，服务调用的时候直接获取使用
+     *
      * Get called when the server or client instance initiating.
      *
      * @param url
@@ -82,8 +85,14 @@ public class DefaultExecutorRepository implements ExecutorRepository {
         return executor;
     }
 
+    /**
+     * 获取线程池
+     */
     public ExecutorService getExecutor(URL url) {
+
+        // 服务调用的时候获取，线程池已经初始化完成，这里能拿到值
         Map<Integer, ExecutorService> executors = data.get(EXECUTOR_SERVICE_COMPONENT_KEY);
+
         /**
          * It's guaranteed that this method is called after {@link #createExecutorIfAbsent(URL)}, so data should already
          * have Executor instances generated and stored.
@@ -167,6 +176,7 @@ public class DefaultExecutorRepository implements ExecutorRepository {
         data.clear();
     }
 
+    /** 创建线程池,默认是:FixedThreadPool */
     private ExecutorService createExecutor(URL url) {
         return (ExecutorService) ExtensionLoader.getExtensionLoader(ThreadPool.class).getAdaptiveExtension().getExecutor(url);
     }

@@ -34,6 +34,8 @@ import static org.apache.dubbo.common.constants.CommonConstants.REMOTE_APPLICATI
 import static org.apache.dubbo.common.constants.CommonConstants.TIME_COUNTDOWN_KEY;
 
 /**
+ * ConsumerContextFilter consumer 调用会第一个调用到这个 Filter，然后再依次调用其他 Filter
+ *
  * ConsumerContextFilter set current RpcContext with invoker,invocation, local host, remote host and port
  * for consumer invoker.It does it to make the requires info available to execution thread's RpcContext.
  *

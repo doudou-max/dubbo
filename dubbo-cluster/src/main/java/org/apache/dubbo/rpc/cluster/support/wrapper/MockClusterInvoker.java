@@ -95,9 +95,9 @@ public class MockClusterInvoker<T> implements ClusterInvoker<T> {
         // 获取 mock 配置值
         String value = getUrl().getMethodParameter(invocation.getMethodName(), MOCK_KEY, Boolean.FALSE.toString()).trim();
 
-        // 无 mock 逻辑，直接调用其他 Invoker 对象的 invoke 方法
+        // no mock，无 mock 逻辑，直接调用其他 Invoker 对象的 invoke 方法
         if (value.length() == 0 || "false".equalsIgnoreCase(value)) {
-            //no mock  AbstractCluster.invoke()
+            // 下一个 Invoker 类型：AbstractCluster.invoke()
             result = this.invoker.invoke(invocation);
         }
         // 直接执行 mock 逻辑，不发起远程调用

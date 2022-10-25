@@ -85,12 +85,16 @@ public abstract class AbstractCluster implements Cluster {
             return clusterInvoker.isAvailable();
         }
 
+        /**
+         * cluster invoke 调用
+         *   interceptor.intercept(next, invocation) 这个接口里面有默认实现
+         */
         @Override
         public Result invoke(Invocation invocation) throws RpcException {
             Result asyncResult;
             try {
                 interceptor.before(next, invocation);
-                // AbstractClusterInvoker -> ClusterInterceptor.invoke()
+                // 下一步调用：ClusterInterceptor.intercept()  (这是个接口，有默认实现)
                 asyncResult = interceptor.intercept(next, invocation);
             } catch (Exception e) {
                 // onError callback

@@ -136,6 +136,9 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
         return getInterface() + " -> " + (getUrl() == null ? "" : getUrl().toString());
     }
 
+    /**
+     * 由 AsyncToSyncInvoker 调用到这里 (当然也有其他的实现 Invoker 调用到这里)
+     */
     @Override
     public Result invoke(Invocation inv) throws RpcException {
         // if invoker is destroyed due to address refresh from registry, let's allow the current invoke to proceed
@@ -171,7 +174,7 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
         // 同步 rpc 调用
         AsyncRpcResult asyncResult;
         try {
-            // 调用 DubboInvoker 的 doInvoke()
+            // 调用 DubboInvoker 的 doInvoke() (也有其他通讯协议：grpc、thrift、injvm)
             asyncResult = (AsyncRpcResult) doInvoke(invocation);
         } catch (InvocationTargetException e) { // biz exception
             Throwable te = e.getTargetException();
@@ -198,7 +201,11 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
     }
 
     protected ExecutorService getCallbackExecutor(URL url, Invocation inv) {
+
+        // getDefaultExtension(): 获取 DefaultExecutorRepository 对象
+        // 再根据对象调用 getExecutor() 获取线程池
         ExecutorService sharedExecutor = ExtensionLoader.getExtensionLoader(ExecutorRepository.class).getDefaultExtension().getExecutor(url);
+
         if (InvokeMode.SYNC == RpcUtils.getInvokeMode(getUrl(), inv)) {
             if(sharedExecutor == null) {
                 sharedExecutor = ExtensionLoader.getExtensionLoader(ExecutorRepository.class).getDefaultExtension().getSharedExecutor();

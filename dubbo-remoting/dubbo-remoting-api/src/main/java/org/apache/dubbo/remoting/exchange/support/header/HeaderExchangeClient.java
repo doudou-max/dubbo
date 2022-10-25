@@ -45,7 +45,9 @@ import static org.apache.dubbo.remoting.utils.UrlUtils.getIdleTimeout;
  */
 public class HeaderExchangeClient implements ExchangeClient {
 
+    /** org.apache.dubbo.remoting.transport.netty4.NettyClient */
     private final Client client;
+    /** org.apache.dubbo.remoting.transport.netty4.NettyClient */
     private final ExchangeChannel channel;
 
     private static final HashedWheelTimer IDLE_CHECK_TIMER = new HashedWheelTimer(
@@ -90,8 +92,10 @@ public class HeaderExchangeClient implements ExchangeClient {
         return channel.request(request, executor);
     }
 
+    /** 发送请求  netty4.NettyClient (默认实现) */
     @Override
     public CompletableFuture<Object> request(Object request, int timeout, ExecutorService executor) throws RemotingException {
+        // 调用channel -> HeaderExchangeChannel
         return channel.request(request, timeout, executor);
     }
 

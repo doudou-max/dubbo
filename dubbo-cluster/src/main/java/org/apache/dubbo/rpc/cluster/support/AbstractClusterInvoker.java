@@ -147,18 +147,18 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
         boolean sticky = invokers.get(0).getUrl()
                 .getMethodParameter(methodName, CLUSTER_STICKY_KEY, DEFAULT_CLUSTER_STICKY);
 
-        //ignore overloaded method
+        // ignore overloaded method (忽略重载方法)
         if (stickyInvoker != null && !invokers.contains(stickyInvoker)) {
             stickyInvoker = null;
         }
-        //ignore concurrency problem
+        // ignore concurrency problem (忽略并发问题)
         if (sticky && stickyInvoker != null && (selected == null || !selected.contains(stickyInvoker))) {
             if (availablecheck && stickyInvoker.isAvailable()) {
                 return stickyInvoker;
             }
         }
 
-        // 根据具体的负载均衡策略处理负载均衡
+        // 根据具体的负载均衡策略处理负载均衡，返回执行的 Invoker
         Invoker<T> invoker = doSelect(loadbalance, invocation, invokers, selected);
 
         if (sticky) {
@@ -168,14 +168,16 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
     }
 
     /**
-     * 处理负载均衡
+     * 根据 invokers 列表和负载均衡策略选择执行 invoker 返回
      */
     private Invoker<T> doSelect(LoadBalance loadbalance, Invocation invocation,
                                 List<Invoker<T>> invokers, List<Invoker<T>> selected) throws RpcException {
 
+        // 为空
         if (CollectionUtils.isEmpty(invokers)) {
             return null;
         }
+        // 只有一个
         if (invokers.size() == 1) {
             return invokers.get(0);
         }
@@ -262,6 +264,7 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
      */
     @Override
     public Result invoke(final Invocation invocation) throws RpcException {
+
         // 检查是否销毁
         checkWhetherDestroyed();
 
@@ -271,12 +274,14 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
             ((RpcInvocation) invocation).addObjectAttachments(contextAttachments);
         }
 
-        // directory 处理，consumer 获取 provider 可用列表
+        // directory 处理，consumer 获取 provider 可用列表 (处理路由，根据路由过滤 provider 路径)
         List<Invoker<T>> invokers = list(invocation);
-        // loadbalance (选择具体的负载均衡实现)
+
+        // 根据 invokers 获取负载均衡策略，默认 RandomLoadBalance
         LoadBalance loadbalance = initLoadBalance(invokers, invocation);
         RpcUtils.attachInvocationIdIfAsync(getUrl(), invocation);
-        // 调用 FailoverClusterInvoker
+
+        // 执行服务调用，默认策略 FailoverClusterInvoker
         return doInvoke(invocation, invokers, loadbalance);
     }
 

@@ -51,8 +51,12 @@ public class InvokerWrapper<T> implements Invoker<T> {
         return invoker.isAvailable();
     }
 
+    /**
+     * FailoverClusterInvoker(熔断策略) 调用到这里的 invoke()
+     */
     @Override
     public Result invoke(Invocation invocation) throws RpcException {
+        // 下一步调用：FilterNode.invoke()
         return invoker.invoke(invocation);
     }
 

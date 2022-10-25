@@ -145,6 +145,8 @@ final class NettyChannel extends AbstractChannel {
     }
 
     /**
+     * netty4 实现的消息发送
+     *
      * Send message by netty and whether to wait the completion of the send.
      *
      * @param message message that need send.
@@ -153,7 +155,8 @@ final class NettyChannel extends AbstractChannel {
      */
     @Override
     public void send(Object message, boolean sent) throws RemotingException {
-        // whether the channel is closed
+
+        // whether the channel is closed  父类，检查连接是否关闭
         super.send(message, sent);
 
         boolean success = true;

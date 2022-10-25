@@ -34,6 +34,8 @@ public interface ClusterInterceptor {
     void after(AbstractClusterInvoker<?> clusterInvoker, Invocation invocation);
 
     /**
+     * java8 接口支持默认实现，不需要再对接口实现
+     *
      * Does not need to override this method, override {@link #before(AbstractClusterInvoker, Invocation)}
      * and {@link #after(AbstractClusterInvoker, Invocation)}, methods to add your own logic expected to be
      * executed before and after invoke.
@@ -44,7 +46,7 @@ public interface ClusterInterceptor {
      * @throws RpcException
      */
     default Result intercept(AbstractClusterInvoker<?> clusterInvoker, Invocation invocation) throws RpcException {
-        // AbstractClusterInvoker.invoke()
+        // 下一步调用：AbstractClusterInvoker.invoke()
         return clusterInvoker.invoke(invocation);
     }
 

@@ -95,11 +95,15 @@ public class DefaultFuture extends CompletableFuture<Object> {
      * check time out of the future
      */
     private static void timeoutCheck(DefaultFuture future) {
+        // 新建一个超时检测任务
         TimeoutCheckTask task = new TimeoutCheckTask(future.getId());
+        // 开启定时器计时检测请求
         future.timeoutCheckTask = TIME_OUT_TIMER.newTimeout(task, future.getTimeout(), TimeUnit.MILLISECONDS);
     }
 
     /**
+     * 将 client request 放到 DefaultFuture 中，实现 异步转同步
+     *
      * init a DefaultFuture
      * 1.init a DefaultFuture
      * 2.timeout check
@@ -110,13 +114,14 @@ public class DefaultFuture extends CompletableFuture<Object> {
      * @return a new DefaultFuture
      */
     public static DefaultFuture newFuture(Channel channel, Request request, int timeout, ExecutorService executor) {
+        // 新建 future，将请求信息缓存到本地 map 中，超时时间 1 秒中
         final DefaultFuture future = new DefaultFuture(channel, request, timeout);
         future.setExecutor(executor);
         // ThreadlessExecutor needs to hold the waiting future in case of circuit return.
         if (executor instanceof ThreadlessExecutor) {
             ((ThreadlessExecutor) executor).setWaitingFuture(future);
         }
-        // timeout check
+        // timeout check 超时检测
         timeoutCheck(future);
         return future;
     }
