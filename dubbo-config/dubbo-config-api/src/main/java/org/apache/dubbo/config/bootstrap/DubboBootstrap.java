@@ -869,6 +869,7 @@ public class DubboBootstrap {
             if (logger.isInfoEnabled()) {
                 logger.info(NAME + " is starting...");
             }
+
             // 服务暴露  (provider 调用)
             // 1. export Dubbo Services
             exportServices();
@@ -881,8 +882,7 @@ public class DubboBootstrap {
                 registerServiceInstance();
             }
 
-            // consumer 服务启动并不会通过这里调用 ReferenceConfig 去调用 init()
-            // 而是通过 spring 的 FactoryBeanRegistrySupport
+            // 服务引用 (consumer 调用)
             referServices();
 
             if (asyncExportingFutures.size() > 0) {

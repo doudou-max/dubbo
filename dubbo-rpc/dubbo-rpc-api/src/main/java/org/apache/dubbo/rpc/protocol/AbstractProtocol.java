@@ -99,8 +99,11 @@ public abstract class AbstractProtocol implements Protocol {
         }
     }
 
+    /** 服务引用 */
     @Override
     public <T> Invoker<T> refer(Class<T> type, URL url) throws RpcException {
+        // notify -> refer -> protocolBindingRefer -> DubboProtocol
+        // 返回 AsyncToSyncInvoker 类型的 invoker，protocolBindingRefer，协议类型绑定引用
         return new AsyncToSyncInvoker<>(protocolBindingRefer(type, url));
     }
 

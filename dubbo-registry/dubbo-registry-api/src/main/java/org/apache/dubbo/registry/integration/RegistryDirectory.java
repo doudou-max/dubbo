@@ -135,6 +135,7 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> {
                 providerURLs = addressListener.notify(providerURLs, getConsumerUrl(), this);
             }
         }
+        // 收到通知，进行刷新
         refreshOverrideAndInvoker(providerURLs);
     }
 
@@ -153,6 +154,7 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> {
     private synchronized void refreshOverrideAndInvoker(List<URL> urls) {
         // mock zookeeper://xxx?mock=return null
         overrideDirectoryUrl();
+        // 刷新invoker
         refreshInvoker(urls);
     }
 
@@ -169,6 +171,8 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> {
      * @param invokerUrls this parameter can't be null
      */
     private void refreshInvoker(List<URL> invokerUrls) {
+
+        // 注册中心推送过来的URL列表
         Assert.notNull(invokerUrls, "invokerUrls should not be null");
 
         if (invokerUrls.size() == 1
@@ -193,6 +197,8 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> {
                 return;
             }
             this.forbidden = false; // Allow to access
+
+            // 根据 notify 的内容处理 invoker
             Map<URL, Invoker<T>> newUrlInvokerMap = toInvokers(invokerUrls);// Translate url list to Invoker map
 
             /**
@@ -330,6 +336,7 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> {
                     } else {
                         enabled = url.getParameter(ENABLED_KEY, true);
                     }
+                    // protocol.refer() 服务引用 (notify -> AbstractProtocol)
                     if (enabled) {
                         invoker = new InvokerDelegate<>(protocol.refer(serviceType, url), url, providerUrl);
                     }

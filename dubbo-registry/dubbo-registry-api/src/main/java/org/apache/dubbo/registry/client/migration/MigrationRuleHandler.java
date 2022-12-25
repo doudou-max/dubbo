@@ -55,13 +55,17 @@ public class MigrationRuleHandler<T> {
         } else {
             switch (rule.getStep()) {
                 case APPLICATION_FIRST:
+                    // 智能决策接口级/应用级地址
                     migrationInvoker.migrateToServiceDiscoveryInvoker(false);
                     break;
                 case FORCE_APPLICATION:
+                    // 只消费应用级地址
                     migrationInvoker.migrateToServiceDiscoveryInvoker(true);
                     break;
                 case FORCE_INTERFACE:
+                    // 只消费接口级地址
                 default:
+                    // 默认消费接口级地址
                     migrationInvoker.fallbackToInterfaceInvoker();
             }
         }

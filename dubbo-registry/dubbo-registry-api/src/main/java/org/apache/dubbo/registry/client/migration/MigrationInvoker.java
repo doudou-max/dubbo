@@ -153,8 +153,10 @@ public class MigrationInvoker<T> implements MigrationClusterInvoker<T> {
         directory.subscribe(RegistryProtocol.toSubscribeUrl(newSubscribeUrl));
     }
 
+    /** 服务引用 */
     @Override
     public synchronized void fallbackToInterfaceInvoker() {
+        // 刷新接口 invoker
         refreshInterfaceInvoker();
         setListener(invoker, () -> {
             this.destroyServiceDiscoveryInvoker(this.serviceDiscoveryInvoker);
@@ -323,14 +325,18 @@ public class MigrationInvoker<T> implements MigrationClusterInvoker<T> {
         directory.setInvokersChangedListener(listener);
     }
 
+    /** 刷新接口 invoker */
     @Override
     public synchronized void refreshInterfaceInvoker() {
+        // 清空监听器
         clearListener(invoker);
+        // 是否需要刷新
         if (needRefresh(invoker)) {
             // FIXME invoker.destroy();
             if (logger.isDebugEnabled()) {
                 logger.debug("Re-subscribing interface addresses for interface " + type.getName());
             }
+            // 创建 invoker
             invoker = registryProtocol.getInvoker(cluster, registry, type, url);
 
             if (migrationMultiRegistry) {

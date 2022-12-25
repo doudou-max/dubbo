@@ -22,6 +22,9 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 /**
  * dubbo consumer 启动类
+ *
+ * dubbo 消费者端启动类
+ *   会进行服务引用
  */
 public class Application {
 

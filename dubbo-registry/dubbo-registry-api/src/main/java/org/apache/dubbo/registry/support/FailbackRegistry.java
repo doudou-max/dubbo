@@ -352,6 +352,9 @@ public abstract class FailbackRegistry extends AbstractRegistry {
         }
     }
 
+    /**
+     * 注册中心通知 dubbo
+     */
     @Override
     protected void notify(URL url, NotifyListener listener, List<URL> urls) {
         if (url == null) {
@@ -361,6 +364,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
             throw new IllegalArgumentException("notify listener == null");
         }
         try {
+            // 执行通知
             doNotify(url, listener, urls);
         } catch (Exception t) {
             // Record a failed registration request to a failed list

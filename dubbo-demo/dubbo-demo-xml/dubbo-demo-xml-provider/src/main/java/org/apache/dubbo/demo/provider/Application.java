@@ -20,6 +20,11 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 /**
  * provider 启动类
+ *
+ * dubbo 服务提供者的启动类，会进行服务暴露
+ *   1.通过 netty 实现端口号暴露
+ *   2.往注册中心写数据
+ *
  */
 public class Application {
 
