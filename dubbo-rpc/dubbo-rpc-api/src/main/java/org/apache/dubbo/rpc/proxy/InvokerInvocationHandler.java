@@ -90,7 +90,7 @@ public class InvokerInvocationHandler implements InvocationHandler {
         } else if (parameterTypes.length == 1 && "equals".equals(methodName)) {
             return invoker.equals(args[0]);
         }
-        // 实例化一个 RpcInvocation，后续链路调用传递
+        // 将  method 和 args 封装到 RpcInvocation 中，并执行后续的调用
         RpcInvocation rpcInvocation = new RpcInvocation(method, invoker.getInterface().getName(), protocolServiceKey, args);
 
         String serviceKey = invoker.getUrl().getServiceKey();
@@ -104,8 +104,6 @@ public class InvokerInvocationHandler implements InvocationHandler {
             rpcInvocation.put(Constants.METHOD_MODEL, consumerModel.getMethodModel(method));
         }
 
-        // 方法回调(服务调用)，调用 DubboInvoker.invoke()
-        // 当然中间也有其他的步骤：filter链路、集群处理
         // 下一个 Invoker： MigrationInvoker
         return invoker.invoke(rpcInvocation).recreate();
     }

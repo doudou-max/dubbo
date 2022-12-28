@@ -89,18 +89,20 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
     protected Result doInvoke(final Invocation invocation) throws Throwable {
         RpcInvocation inv = (RpcInvocation) invocation;
         final String methodName = RpcUtils.getMethodName(invocation);
+        // 设置 path 和 version 到 attachment
         inv.setAttachment(PATH_KEY, getUrl().getPath());
         inv.setAttachment(VERSION_KEY, version);
 
         // ReferenceCountExchangeClient
         ExchangeClient currentClient;
         if (clients.length == 1) {
+            // 从 clients 数组中获取 ExchangeClient
             currentClient = clients[0];
         } else {
             currentClient = clients[index.getAndIncrement() % clients.length];
         }
         try {
-            // 是否异步无返回
+            // 是否单向通信
             boolean isOneway = RpcUtils.isOneway(getUrl(), invocation);
             // 超时时间
             int timeout = calculateTimeout(invocation, methodName);
@@ -108,7 +110,9 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
             // 单向请求 (异步请求无返回)
             if (isOneway) {
                 boolean isSent = getUrl().getMethodParameter(methodName, Constants.SENT_KEY, false);
+                // 发送请求
                 currentClient.send(inv, isSent);
+                // 返回空的 RpcResult
                 return AsyncRpcResult.newDefaultAsyncResult(invocation);
             }
             // 双向请求 (异步转同步)
@@ -116,6 +120,7 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
                 // 获取线程池，默认 Fixed
                 ExecutorService executor = getCallbackExecutor(getUrl(), inv);
                 // 发起请求 -> HeaderExchangeClient -> HeaderExchangeChannel -> request()
+                // CompletableFuture.thenApply() 拿到前一个线程的执行结果往下执行
                 CompletableFuture<AppResponse> appResponseFuture = currentClient.request(inv, timeout, executor).thenApply(obj -> (AppResponse) obj);
                 // save for 2.6.x compatibility, for example, TraceFilter in Zipkin uses com.alibaba.xxx.FutureAdapter
                 // 将请求的 Future 设置在 Context 中

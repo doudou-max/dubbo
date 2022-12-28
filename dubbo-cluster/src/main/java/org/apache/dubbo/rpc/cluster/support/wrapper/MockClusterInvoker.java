@@ -36,6 +36,9 @@ import java.util.List;
 import static org.apache.dubbo.rpc.Constants.MOCK_KEY;
 import static org.apache.dubbo.rpc.cluster.Constants.INVOCATION_NEED_MOCK;
 
+/**
+ * 集群容错 Invoker
+ */
 public class MockClusterInvoker<T> implements ClusterInvoker<T> {
 
     private static final Logger logger = LoggerFactory.getLogger(MockClusterInvoker.class);
@@ -120,6 +123,7 @@ public class MockClusterInvoker<T> implements ClusterInvoker<T> {
                     if(rpcException.isBiz()){
                         throw  rpcException;
                     }else {
+                        // 调用失败，执行 mock 逻辑
                         result = doMockInvoke(invocation, rpcException);
                     }
                 }
