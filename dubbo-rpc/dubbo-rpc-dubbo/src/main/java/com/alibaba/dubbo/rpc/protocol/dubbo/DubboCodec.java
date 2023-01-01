@@ -59,11 +59,19 @@ public class DubboCodec extends ExchangeCodec implements Codec2 {
     public static final Class<?>[] EMPTY_CLASS_ARRAY = new Class<?>[0];
     private static final Logger log = LoggerFactory.getLogger(DubboCodec.class);
 
+    /**
+     * provider 端收到请求的时候，会将数据进行解析，
+     * 数据解析之后会包装成 Request 对象
+     */
     @Override
     protected Object decodeBody(Channel channel, InputStream is, byte[] header) throws IOException {
         byte flag = header[2], proto = (byte) (flag & SERIALIZATION_MASK);
         // get request id.
         long id = Bytes.bytes2long(header, 4);
+
+        // 0:Response  1:Request
+
+        // Response
         if ((flag & FLAG_REQUEST) == 0) {
             // decode response.
             Response res = new Response(id);
@@ -111,7 +119,9 @@ public class DubboCodec extends ExchangeCodec implements Codec2 {
                 res.setErrorMessage(StringUtils.toString(t));
             }
             return res;
-        } else {
+        }
+        // Request
+        else {
             // decode request.
             Request req = new Request(id);
             req.setVersion(Version.getProtocolVersion());
@@ -135,6 +145,7 @@ public class DubboCodec extends ExchangeCodec implements Codec2 {
                             Constants.DECODE_IN_IO_THREAD_KEY,
                             Constants.DEFAULT_DECODE_IN_IO_THREAD)) {
                         inv = new DecodeableRpcInvocation(channel, req, is, proto);
+                        // 解码
                         inv.decode();
                     } else {
                         inv = new DecodeableRpcInvocation(channel, req,
@@ -178,17 +189,22 @@ public class DubboCodec extends ExchangeCodec implements Codec2 {
     protected void encodeRequestData(Channel channel, ObjectOutput out, Object data, String version) throws IOException {
         RpcInvocation inv = (RpcInvocation) data;
 
+        // 序列化 dubbo version、path、version
         out.writeUTF(version);
         out.writeUTF(inv.getAttachment(Constants.PATH_KEY));
         out.writeUTF(inv.getAttachment(Constants.VERSION_KEY));
 
+        // 调用方法名
         out.writeUTF(inv.getMethodName());
+        // 将参数转为字符串，并进行序列化
         out.writeUTF(ReflectUtils.getDesc(inv.getParameterTypes()));
         Object[] args = inv.getArguments();
         if (args != null)
             for (int i = 0; i < args.length; i++) {
+                // 对运行时参数序列化
                 out.writeObject(encodeInvocationArgument(channel, inv, i));
             }
+        // 序列化 attachment
         out.writeObject(inv.getAttachments());
     }
 

@@ -43,6 +43,7 @@ public class MultiMessageHandler extends AbstractChannelHandlerDelegate {
             MultiMessage list = (MultiMessage) message;
             for (Object obj : list) {
                 try {
+                    // HeartbeatHandler
                     handler.received(channel, obj);
                 } catch (ExecutionException e) {
                     logger.error("MultiMessageHandler received fail.", e);
@@ -50,6 +51,7 @@ public class MultiMessageHandler extends AbstractChannelHandlerDelegate {
                 }
             }
         } else {
+            // HeartbeatHandler
             handler.received(channel, message);
         }
     }

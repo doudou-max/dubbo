@@ -43,10 +43,9 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
+ * Dubbo 的编码和解码，netty 请求的时候会回调这里的方法
+ *
  * ExchangeCodec.
- *
- *
- *
  */
 public class ExchangeCodec extends TelnetCodec {
 
@@ -70,8 +69,10 @@ public class ExchangeCodec extends TelnetCodec {
     @Override
     public void encode(Channel channel, ChannelBuffer buffer, Object msg) throws IOException {
         if (msg instanceof Request) {
+            // 对 Request 对象编码
             encodeRequest(channel, buffer, (Request) msg);
         } else if (msg instanceof Response) {
+            // 对 Response 对象编码
             encodeResponse(channel, buffer, (Response) msg);
         } else {
             super.encode(channel, buffer, msg);
@@ -81,8 +82,11 @@ public class ExchangeCodec extends TelnetCodec {
     @Override
     public Object decode(Channel channel, ChannelBuffer buffer) throws IOException {
         int readable = buffer.readableBytes();
+        // 消息头字节数组
         byte[] header = new byte[Math.min(readable, HEADER_LENGTH)];
+        // 读取消息头数据
         buffer.readBytes(header);
+        // 调用重载方法进行解码
         return decode(channel, buffer, readable, header);
     }
 
@@ -103,6 +107,8 @@ public class ExchangeCodec extends TelnetCodec {
                     break;
                 }
             }
+            // 通过 telnet 命令行发送的数据包不包含消息头，所以这里
+            // 调用 TelnetCodec 的 decode 方法对数据包进行解码
             return super.decode(channel, buffer, readable, header);
         }
         // check length.
@@ -112,6 +118,7 @@ public class ExchangeCodec extends TelnetCodec {
 
         // get data length.
         int len = Bytes.bytes2int(header, 12);
+        // 检测消息体长度是否超出限制
         checkPayload(channel, len);
 
         int tt = len + HEADER_LENGTH;
@@ -123,6 +130,7 @@ public class ExchangeCodec extends TelnetCodec {
         ChannelBufferInputStream is = new ChannelBufferInputStream(buffer, len);
 
         try {
+            // 解码
             return decodeBody(channel, is, header);
         } finally {
             if (is.available() > 0) {
@@ -236,10 +244,12 @@ public class ExchangeCodec extends TelnetCodec {
         int savedWriteIndex = buffer.writerIndex();
         buffer.writerIndex(savedWriteIndex + HEADER_LENGTH);
         ChannelBufferOutputStream bos = new ChannelBufferOutputStream(buffer);
+        // 创建序列化器，比如 Hessian2ObjectOutput
         ObjectOutput out = serialization.serialize(channel.getUrl(), bos);
         if (req.isEvent()) {
             encodeEventData(channel, out, req.getData());
         } else {
+            // Request 的 data 字段序列化
             encodeRequestData(channel, out, req.getData(), req.getVersion());
         }
         out.flushBuffer();
@@ -248,6 +258,7 @@ public class ExchangeCodec extends TelnetCodec {
         }
         bos.flush();
         bos.close();
+        // 获取写入字节数，消息体的长度
         int len = bos.writtenBytes();
         checkPayload(channel, len);
         Bytes.int2bytes(len, header, 12);

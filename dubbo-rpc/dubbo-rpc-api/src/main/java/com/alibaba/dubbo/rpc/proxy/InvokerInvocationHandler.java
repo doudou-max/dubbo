@@ -23,10 +23,29 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 
 /**
+ * dubbo 调用流程
+ *   proxy0#sayHello(String)
+ *     —> InvokerInvocationHandler#invoke(Object, Method, Object[])
+ *       —> MockClusterInvoker#invoke(Invocation)
+ *         —> AbstractClusterInvoker#invoke(Invocation)
+ *           —> FailoverClusterInvoker#doInvoke(Invocation, List<Invoker<T>>, LoadBalance)
+ *             —> Filter#invoke(Invoker, Invocation)  // 多个 Filter 调用
+ *               —> ListenerInvokerWrapper#invoke(Invocation)
+ *                 —> AbstractInvoker#invoke(Invocation)
+ *                   —> DubboInvoker#doInvoke(Invocation)
+ *                     —> ReferenceCountExchangeClient#request(Object, int)
+ *                       —> HeaderExchangeClient#request(Object, int)
+ *                         —> HeaderExchangeChannel#request(Object, int)
+ *                           —> AbstractPeer#send(Object)
+ *                             —> AbstractClient#send(Object, boolean)
+ *                               —> NettyChannel#send(Object, boolean)
+ *                                 —> NioClientSocketChannel#write(Object)
+ *
  * InvokerHandler
  */
 public class InvokerInvocationHandler implements InvocationHandler {
 
+    // MockClusterInvoker
     private final Invoker<?> invoker;
 
     public InvokerInvocationHandler(Invoker<?> handler) {
@@ -37,9 +56,11 @@ public class InvokerInvocationHandler implements InvocationHandler {
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         String methodName = method.getName();
         Class<?>[] parameterTypes = method.getParameterTypes();
+        // 拦截定义在 Object 类中的方法（未被子类重写），比如 wait/notify
         if (method.getDeclaringClass() == Object.class) {
             return method.invoke(invoker, args);
         }
+        // 如果 toString、hashCode 和 equals 等方法被子类重写了，这里也直接调用
         if ("toString".equals(methodName) && parameterTypes.length == 0) {
             return invoker.toString();
         }
@@ -49,6 +70,7 @@ public class InvokerInvocationHandler implements InvocationHandler {
         if ("equals".equals(methodName) && parameterTypes.length == 1) {
             return invoker.equals(args[0]);
         }
+        // 将 method 和 args 封装到 RpcInvocation 中，并执行后续的调用
         return invoker.invoke(new RpcInvocation(method, args)).recreate();
     }
 

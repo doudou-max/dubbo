@@ -55,6 +55,9 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
         this.handler = handler;
     }
 
+    /**
+     * 响应处理
+     */
     static void handleResponse(Channel channel, Response response) throws RemotingException {
         if (response != null && !response.isHeartbeat()) {
             DefaultFuture.received(channel, response);
@@ -77,6 +80,7 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
 
     Response handleRequest(ExchangeChannel channel, Request req) throws RemotingException {
         Response res = new Response(req.getId(), req.getVersion());
+        // 检查请求是否合法
         if (req.isBroken()) {
             Object data = req.getData();
 
@@ -89,9 +93,11 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
 
             return res;
         }
+        // 获取 data 字段值，RpcInvocation 对象
         // find handler by message class.
         Object msg = req.getData();
         try {
+            // 业务处理数据，DubboProtocol
             // handle data.
             Object result = handler.reply(channel, msg);
             res.setStatus(Response.OK);
@@ -163,20 +169,31 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
         channel.setAttribute(KEY_READ_TIMESTAMP, System.currentTimeMillis());
         ExchangeChannel exchangeChannel = HeaderExchangeChannel.getOrAddChannel(channel);
         try {
+            // 处理 Request，provider 接收 consumer 请求处理
             if (message instanceof Request) {
                 // handle request.
                 Request request = (Request) message;
+                // 处理事件类型
                 if (request.isEvent()) {
                     handlerEvent(channel, request);
-                } else {
+                }
+                // 处理普通请求
+                else {
+                    // 双向通信
                     if (request.isTwoWay()) {
+                        // 调用业务处理，得到调用结果
                         Response response = handleRequest(exchangeChannel, request);
+                        // 回复给消费端
                         channel.send(response);
-                    } else {
+                    }
+                    // 单向通讯
+                    else {
                         handler.received(exchangeChannel, request.getData());
                     }
                 }
-            } else if (message instanceof Response) {
+            }
+            // 处理 Response，consumer 接收 provider 返回结果响应
+            else if (message instanceof Response) {
                 handleResponse(channel, (Response) message);
             } else if (message instanceof String) {
                 if (isClientSide(channel)) {

@@ -69,6 +69,7 @@ public class DecodeableRpcInvocation extends RpcInvocation implements Codec, Dec
     public void decode() throws Exception {
         if (!hasDecoded && channel != null && inputStream != null) {
             try {
+                // 解码
                 decode(channel, inputStream);
             } catch (Throwable e) {
                 if (log.isWarnEnabled()) {
@@ -93,15 +94,18 @@ public class DecodeableRpcInvocation extends RpcInvocation implements Codec, Dec
                 .deserialize(channel.getUrl(), input);
         this.put(SERIALIZATION_ID_KEY, serializationType);
 
+        // 反序列化得到 dubbo version，保存到 attachment
         String dubboVersion = in.readUTF();
         request.setVersion(dubboVersion);
         setAttachment(Constants.DUBBO_VERSION_KEY, dubboVersion);
 
+        // path
         String path = in.readUTF();
         setAttachment(Constants.PATH_KEY, path);
         String version = in.readUTF();
         setAttachment(Constants.VERSION_KEY, version);
 
+        // 调用方法名称
         setMethodName(in.readUTF());
         try {
             if (Boolean.parseBoolean(System.getProperty(SERIALIZATION_SECURITY_CHECK_KEY, "false"))) {
@@ -110,15 +114,18 @@ public class DecodeableRpcInvocation extends RpcInvocation implements Codec, Dec
 
             Object[] args;
             Class<?>[] pts;
+            // 参数字符串
             String desc = in.readUTF();
             if (desc.length() == 0) {
                 pts = DubboCodec.EMPTY_CLASS_ARRAY;
                 args = DubboCodec.EMPTY_OBJECT_ARRAY;
             } else {
+                // 将 desc 解析为参数类型数组
                 pts = ReflectUtils.desc2classArray(desc);
                 args = new Object[pts.length];
                 for (int i = 0; i < args.length; i++) {
                     try {
+                        // 解析运行时参数
                         args[i] = in.readObject(pts[i]);
                     } catch (Exception e) {
                         if (log.isWarnEnabled()) {
@@ -129,20 +136,25 @@ public class DecodeableRpcInvocation extends RpcInvocation implements Codec, Dec
             }
             setParameterTypes(pts);
 
+            // 通过反序列得到 attachment
             Map<String, String> map = (Map<String, String>) in.readObject(Map.class);
             if (map != null && map.size() > 0) {
                 Map<String, String> attachment = getAttachments();
                 if (attachment == null) {
                     attachment = new HashMap<String, String>();
                 }
+                // attachment 数据进行合并
                 attachment.putAll(map);
                 setAttachments(attachment);
             }
+
+            // 对 callback 类型参数处理
             //decode argument ,may be callback
             for (int i = 0; i < args.length; i++) {
                 args[i] = decodeInvocationArgument(channel, this, pts, i, args[i]);
             }
 
+            // 设置参数列表
             setArguments(args);
 
         } catch (ClassNotFoundException e) {

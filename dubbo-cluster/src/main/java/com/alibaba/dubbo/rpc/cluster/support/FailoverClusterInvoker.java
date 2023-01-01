@@ -56,6 +56,7 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
         List<Invoker<T>> copyinvokers = invokers;
         checkInvokers(copyinvokers, invocation);
         String methodName = RpcUtils.getMethodName(invocation);
+        // 获取重试次数
         int len = getUrl().getMethodParameter(methodName, Constants.RETRIES_KEY, Constants.DEFAULT_RETRIES) + 1;
         if (len <= 0) {
             len = 1;
@@ -64,19 +65,25 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
         RpcException le = null; // last exception.
         List<Invoker<T>> invoked = new ArrayList<Invoker<T>>(copyinvokers.size()); // invoked invokers.
         Set<String> providers = new HashSet<String>(len);
+        // 循环调用，失败重试
         for (int i = 0; i < len; i++) {
             //Reselect before retry to avoid a change of candidate `invokers`.
             //NOTE: if `invokers` changed, then `invoked` also lose accuracy.
             if (i > 0) {
                 checkWhetherDestroyed();
+                // 调用 list 获取最新可用 Invoker 列表
                 copyinvokers = list(invocation);
-                // check again
+                // check again，对 copyinvokers 进行判空检查
                 checkInvokers(copyinvokers, invocation);
             }
+            // 通过负载均衡选择 Invoker
             Invoker<T> invoker = select(loadbalance, invocation, copyinvokers, invoked);
+            // 记录已使用过的 invoker
             invoked.add(invoker);
+            // 已使用的 invoker 存到上下文
             RpcContext.getContext().setInvokers((List) invoked);
             try {
+                // invoker 调用，AbstractInvoker
                 Result result = invoker.invoke(invocation);
                 if (le != null && logger.isWarnEnabled()) {
                     logger.warn("Although retry the method " + methodName
@@ -101,6 +108,7 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
                 providers.add(invoker.getUrl().getAddress());
             }
         }
+        // 失败重试，抛出异常
         throw new RpcException(le != null ? le.getCode() : 0, "Failed to invoke the method "
                 + methodName + " in the service " + getInterface().getName()
                 + ". Tried " + len + " times of the providers " + providers

@@ -113,10 +113,15 @@ public class DefaultFuture implements ResponseFuture {
         }
     }
 
+    /**
+     * provider 端回复处理
+     */
     public static void received(Channel channel, Response response) {
         try {
+            // 根据调用编号从 FUTURES 集合中查找指定的 DefaultFuture 对象
             DefaultFuture future = FUTURES.remove(response.getId());
             if (future != null) {
+                // 回复
                 future.doReceived(response);
             } else {
                 logger.warn("The timeout response finally returned at "
@@ -140,12 +145,16 @@ public class DefaultFuture implements ResponseFuture {
         if (timeout <= 0) {
             timeout = Constants.DEFAULT_TIMEOUT;
         }
+        // 检查是否返回调用结果
         if (!isDone()) {
             long start = System.currentTimeMillis();
             lock.lock();
             try {
+                // 循环检测是否返回
                 while (!isDone()) {
+                    // 没返回则等待
                     done.await(timeout, TimeUnit.MILLISECONDS);
+                    // 返回或超时，退出循环
                     if (isDone() || System.currentTimeMillis() - start > timeout) {
                         break;
                     }
@@ -155,10 +164,12 @@ public class DefaultFuture implements ResponseFuture {
             } finally {
                 lock.unlock();
             }
+            // 调用仍未返回，抛超时异常
             if (!isDone()) {
                 throw new TimeoutException(sent > 0, channel, getTimeoutMessage(false));
             }
         }
+        // 返回调用结果
         return returnFromResponse();
     }
 
@@ -172,6 +183,7 @@ public class DefaultFuture implements ResponseFuture {
 
     @Override
     public boolean isDone() {
+        // 根据是否为空配置是否收到结果
         return response != null;
     }
 
@@ -236,9 +248,11 @@ public class DefaultFuture implements ResponseFuture {
         if (res == null) {
             throw new IllegalStateException("response cannot be null");
         }
+        // 调用ok
         if (res.getStatus() == Response.OK) {
             return res.getResult();
         }
+        // 调用不ok
         if (res.getStatus() == Response.CLIENT_TIMEOUT || res.getStatus() == Response.SERVER_TIMEOUT) {
             throw new TimeoutException(res.getStatus() == Response.SERVER_TIMEOUT, channel, res.getErrorMessage());
         }
@@ -276,8 +290,10 @@ public class DefaultFuture implements ResponseFuture {
     private void doReceived(Response res) {
         lock.lock();
         try {
+            // 保存响应对象
             response = res;
             if (done != null) {
+                // 唤醒线程
                 done.signal();
             }
         } finally {

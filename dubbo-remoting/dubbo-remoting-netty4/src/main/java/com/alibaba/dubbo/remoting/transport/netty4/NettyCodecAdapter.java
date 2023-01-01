@@ -59,6 +59,10 @@ final class NettyCodecAdapter {
         return decoder;
     }
 
+    /**
+     * MessageToByteEncoder netty 提供的编码抽象类
+     * InternalEncoder 通过继承该类，实现自定义的编码
+     */
     private class InternalEncoder extends MessageToByteEncoder {
 
         @Override
@@ -67,6 +71,7 @@ final class NettyCodecAdapter {
             Channel ch = ctx.channel();
             NettyChannel channel = NettyChannel.getOrAddChannel(ch, url, handler);
             try {
+                // 编码，ExchangeCodec
                 codec.encode(channel, buffer, msg);
             } finally {
                 NettyChannel.removeChannelIfDisconnected(ch);
@@ -74,6 +79,10 @@ final class NettyCodecAdapter {
         }
     }
 
+    /**
+     * ByteToMessageDecoder netty 提供的解码抽象类
+     * InternalDecoder 通过继承该类，实现自定义的解码
+     */
     private class InternalDecoder extends ByteToMessageDecoder {
 
         @Override
@@ -92,6 +101,7 @@ final class NettyCodecAdapter {
                 do {
                     saveReaderIndex = message.readerIndex();
                     try {
+                        // 解码，ExchangeCodec
                         msg = codec.decode(channel, message);
                     } catch (IOException e) {
                         throw e;

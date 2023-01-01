@@ -21,6 +21,21 @@ import com.alibaba.dubbo.common.logger.LoggerFactory;
 import com.alibaba.dubbo.remoting.Channel;
 import com.alibaba.dubbo.remoting.ChannelHandler;
 
+/**
+ * 处理 AllChannelHandler 传递过来的消息
+ * 可以看到实现 Runnable 接口
+ *
+ * ChannelEventRunnable#run()
+ *   —> DecodeHandler#received(Channel, Object)
+ *     —> HeaderExchangeHandler#received(Channel, Object)
+ *       —> HeaderExchangeHandler#handleRequest(ExchangeChannel, Request)
+ *         —> DubboProtocol.requestHandler#reply(ExchangeChannel, Object)
+ *           —> Filter#invoke(Invoker, Invocation)
+ *             —> AbstractProxyInvoker#invoke(Invocation)
+ *               —> Wrapper0#invokeMethod(Object, String, Class[], Object[])
+ *                 —> DemoServiceImpl#sayHello(String)
+ *
+ */
 public class ChannelEventRunnable implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(ChannelEventRunnable.class);
 
@@ -50,10 +65,14 @@ public class ChannelEventRunnable implements Runnable {
         this.exception = exception;
     }
 
+    /**
+     * 通过线程池处理消息
+     */
     @Override
     public void run() {
         if (state == ChannelState.RECEIVED) {
             try {
+                // DecodeHandler
                 handler.received(channel, message);
             } catch (Exception e) {
                 logger.warn("ChannelEventRunnable handle " + state + " operation error, channel is " + channel
