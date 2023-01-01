@@ -32,6 +32,14 @@ import com.alibaba.dubbo.rpc.support.MockInvoker;
 
 import java.util.List;
 
+/**
+ * Dubbo 的熔断机制
+ * mock 可以配置
+ *   false：没有mock，直接远程调用 (默认)
+ *   force：不发起远程调用，直接执行 mock 逻辑
+ *   fail：调用失败再执行mock逻辑
+ * @param <T>
+ */
 public class MockClusterInvoker<T> implements Invoker<T> {
 
     private static final Logger logger = LoggerFactory.getLogger(MockClusterInvoker.class);
@@ -78,11 +86,14 @@ public class MockClusterInvoker<T> implements Invoker<T> {
             if (logger.isWarnEnabled()) {
                 logger.info("force-mock: " + invocation.getMethodName() + " force-mock enabled , url : " + directory.getUrl());
             }
+            // 直接执行 mock 逻辑，不发起远程调用
             //force:direct mock
             result = doMockInvoke(invocation, null);
         } else {
+            // 表示消费方对调用服务失败后，再执行 mock 逻辑，不抛出异常
             //fail-mock
             try {
+                // 调用其他 Invoker 对象的 invoke 方法
                 result = this.invoker.invoke(invocation);
             } catch (RpcException e) {
                 if (e.isBiz()) {
@@ -91,6 +102,7 @@ public class MockClusterInvoker<T> implements Invoker<T> {
                     if (logger.isWarnEnabled()) {
                         logger.warn("fail-mock: " + invocation.getMethodName() + " fail-mock enabled , url : " + directory.getUrl(), e);
                     }
+                    // 调用失败，执行 mock 逻辑
                     result = doMockInvoke(invocation, e);
                 }
             }
