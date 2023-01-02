@@ -129,16 +129,19 @@ public abstract class FailbackRegistry extends AbstractRegistry {
 
     @Override
     public void register(URL url) {
+        // 父类记录已注册 URL
         super.register(url);
         failedRegistered.remove(url);
         failedUnregistered.remove(url);
         try {
             // Sending a registration request to the server side
+            // 往注册中心写数据
             doRegister(url);
         } catch (Exception e) {
             Throwable t = e;
 
             // If the startup detection is opened, the Exception is thrown directly.
+            // 获取 check 参数，若 check = true 将会直接抛出异常
             boolean check = getUrl().getParameter(Constants.CHECK_KEY, true)
                     && url.getParameter(Constants.CHECK_KEY, true)
                     && !Constants.CONSUMER_PROTOCOL.equals(url.getProtocol());
@@ -153,6 +156,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
             }
 
             // Record a failed registration request to a failed list, retry regularly
+            // 记录注册失败的链接
             failedRegistered.add(url);
         }
     }
