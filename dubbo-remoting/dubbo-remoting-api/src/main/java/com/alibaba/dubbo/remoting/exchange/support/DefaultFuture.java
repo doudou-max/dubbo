@@ -65,6 +65,15 @@ public class DefaultFuture implements ResponseFuture {
     private volatile Response response;
     private volatile ResponseCallback callback;
 
+    /**
+     * 实例化一个 DefaultFuture 对象，将其放到 本地的 map 缓存中， <reqId,DefaultFuture>
+     * DefaultFuture 对象包含超时时间，包含对应的 lock 和 condition 对象，response 的时候根据id可以拿到对应 lock 和 condition 对象
+     * 进而对应把 request 和 response 对应上，实现异步转同步的操作
+     * 
+     * @param channel
+     * @param request
+     * @param timeout
+     */
     public DefaultFuture(Channel channel, Request request, int timeout) {
         this.channel = channel;
         this.request = request;
@@ -115,6 +124,8 @@ public class DefaultFuture implements ResponseFuture {
 
     /**
      * provider 端回复处理
+     * 根据回复的id，获取到 Request 端的 DefaultFuture 对象，从而获取到对应 lock 和 condition 对象
+     * 通过这样实现 Request 和 Response 进行对应
      */
     public static void received(Channel channel, Response response) {
         try {
